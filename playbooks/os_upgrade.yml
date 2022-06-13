@@ -1,0 +1,17 @@
+- hosts:
+      - mini_pc_vms
+      - main_vms
+      - kube_vms
+  become: true
+  tasks:
+      - name: apt
+        apt:
+            update_cache: true
+            upgrade: true
+- hosts: xen_servers
+  become: true
+  tasks:
+      - name: yum
+        yum:
+            name: '*'
+            state: 'latest'

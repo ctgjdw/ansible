@@ -1,0 +1,27 @@
+- hosts: kube_master
+  tasks:
+      - name: Get join command
+        shell: kubeadm token create --print-join-command > {{join_cmd_path}}
+      - name: Get join command from control node
+        fetch:
+            src: '{{join_cmd_path}}'
+            dest: ../artifacts/kube-join-cmd
+            flat: true
+      - name: Get kubeconfig from control node
+        fetch:
+            src: /home/vagrant/.kube/config
+            dest: ../artifacts/config
+            flat: true
+  vars:
+      join_cmd_path: /home/vagrant/kube-join-cmd
+- hosts: kube_workers
+  tasks:
+      - name: Copy to join command to workers
+        copy:
+            src: ../artifacts/kube-join-cmd
+            dest: '{{dest_path}}'
+      - name: Join kube cluster
+        command: bash {{dest_path}}/kube-join-cmd
+        become: true
+  vars:
+      dest_path: /home/vagrant/

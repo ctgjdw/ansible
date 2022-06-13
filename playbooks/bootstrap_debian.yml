@@ -1,0 +1,17 @@
+- name: Boostrap Debian
+  hosts:
+      - main_vms
+      - mini_pc_vms
+  tasks:
+      - name: Transfer sshd_config
+        copy: src=/artifacts/sshd_config dest=/etc/ssh/sshd_config mode=644
+        become: true
+
+      - name: Restart sshd
+        command: service sshd restart
+        become: true
+
+      - name: Install fail2ban
+        apt:
+            name: fail2ban
+            state: present
