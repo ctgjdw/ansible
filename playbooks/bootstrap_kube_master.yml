@@ -1,0 +1,22 @@
+- hosts: kube_master
+  become: true
+  tasks:
+      - name: Transfer manifest files
+        copy:
+            src: ../artifacts/manifests/
+            dest: /manifests/
+            mode: '333'
+      - name: Copy bootstrap script
+        copy:
+            src: ../artifacts/scripts/bootstrap-kube-master.sh
+            dest: /scripts/
+            mode: '100'
+      - name: Copy containerd config
+        copy:
+            src: ../artifacts/configs/containerd-config.toml
+            dest: /config/
+            mode: '344'
+      - name: Run bootstrap script
+        command: bash /scripts/bootstrap-kube-master.sh ctg 1.24.0
+        register: run
+      - debug: var=run.stdout_lines

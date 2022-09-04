@@ -1,27 +1,47 @@
 - hosts: kube_master
+  become: true
   tasks:
       - name: Get join command
-        shell: kubeadm token create --print-join-command > {{join_cmd_path}}
+        shell: kubeadm token create --print-join-command > {{dir_path}}/kube-join-cmd
       - name: Get join command from control node
         fetch:
-            src: '{{join_cmd_path}}'
-            dest: ../artifacts/kube-join-cmd
+            src: '{{dir_path}}/kube-join-cmd'
+            dest: ../temp/kube-join-cmd
             flat: true
       - name: Get kubeconfig from control node
         fetch:
-            src: /home/vagrant/.kube/config
-            dest: ../artifacts/config
+            src: /root/.kube/config
+            dest: ../temp/kube-config
             flat: true
   vars:
-      join_cmd_path: /home/vagrant/kube-join-cmd
+      dir_path: /root
 - hosts: kube_workers
+  become: true
   tasks:
-      - name: Copy to join command to workers
+      - name: Copy bootstrap script
         copy:
-            src: ../artifacts/kube-join-cmd
-            dest: '{{dest_path}}'
+            src: ../artifacts/scripts/bootstrap-kube-worker.sh
+            dest: /scripts/
+            mode: '100'
+      - name: Copy containerd config
+        copy:
+            src: ../artifacts/configs/containerd-config.toml
+            dest: /config/
+            mode: '344'
+      - name: Run bootstrap script
+        command: bash /scripts/bootstrap-kube-worker.sh 1.24.0
+        register: run
+      - debug: var=run.stdout_lines
+      - name: Copy join command to workers
+        copy:
+            src: ../temp/kube-join-cmd
+            dest: '/scripts/kube-join-cmd'
       - name: Join kube cluster
-        command: bash {{dest_path}}/kube-join-cmd
-        become: true
-  vars:
-      dest_path: /home/vagrant/
+        command: bash /scripts/kube-join-cmd
+        register: run2
+      - debug: var=run2.stdout_lines
+- hosts: kube_master
+  become: true
+  tasks:
+      - name: Set worker node
+        command: kubectl label node kube-w1 node-role.kubernetes.io/worker=worker
