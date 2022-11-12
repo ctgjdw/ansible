@@ -1,17 +1,17 @@
 - name: Boostrap Debian
   hosts:
-      - main_vms
-      - mini_pc_vms
+      - kube
   tasks:
       - name: Transfer sshd_config
-        copy: src=/artifacts/sshd_config dest=/etc/ssh/sshd_config mode=644
+        copy: src=/mnt/c/Users/CT/Documents/Code/ansible/artifacts/configs/sshd_config dest=/etc/ssh/sshd_config mode=644
         become: true
+
+      - name: Set authorized key for user ubuntu copying it from current user
+        ansible.posix.authorized_key:
+            user: ctg
+            state: present
+            key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
 
       - name: Restart sshd
         command: service sshd restart
         become: true
-
-      - name: Install fail2ban
-        apt:
-            name: fail2ban
-            state: present
