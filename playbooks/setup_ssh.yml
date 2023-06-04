@@ -1,0 +1,26 @@
+- name: Setup SSH
+  hosts:
+    - worker_vms
+  vars:
+    sshd_config: /mnt/c/Users/{{ user }}/Documents/Code/ansible/artifacts/configs/sshd_config
+  tasks:
+    - name: Transfer sshd_config
+      copy: src={{ sshd_config }} dest=/etc/ssh/sshd_config mode=644
+      become: true
+
+    - name: Modify sshd_config port number
+      ansible.builtin.replace:
+        path: /etc/ssh/sshd_config
+        regexp: "Port SSH_PORT"
+        replace: "Port {{ ssh_port }}"
+      become: true
+
+    - name: Set authorized key for user ubuntu copying it from current user
+      ansible.posix.authorized_key:
+        user: ctg
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: Restart sshd
+      command: service sshd restart
+      become: true

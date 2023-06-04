@@ -99,6 +99,6 @@ chown -R "$USERNAME:$USERNAME" /home/$USERNAME/.kube/
 
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v$CALICO_VER/manifests/tigera-operator.yaml
 
-curl https://raw.githubusercontent.com/projectcalico/calico/v$CALI/manifests/custom-resources.yaml -O
+curl https://raw.githubusercontent.com/projectcalico/calico/v$CALICO_VER/manifests/custom-resources.yaml -O
 sed -i s/192.168.0.0/10.244.0.0/g custom-resources.yaml
 kubectl create -f custom-resources.yaml
